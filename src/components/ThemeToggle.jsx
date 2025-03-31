@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import useThemeStore from "../store/themeStore";
-import { Moon, Sun } from "lucide-react"; // Install Lucide icons: npm i lucide-react
+import { Moon, Sun } from "lucide-react";
 
 const ThemeToggle = () => {
   const { theme, toggleTheme } = useThemeStore();

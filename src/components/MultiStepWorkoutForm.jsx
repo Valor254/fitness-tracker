@@ -1,111 +1,121 @@
-import { useState } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import useWorkoutStore from "../store/workoutStore";
 import ExerciseSearch from "./ExerciseSearch";
+import useWorkoutStore from "../store/workoutStore";
 
-const WorkoutSchema = Yup.object().shape({
-  sets: Yup.number().min(1, "At least 1 set is required").required("Sets are required"),
-  reps: Yup.number().min(1, "At least 1 rep is required").required("Reps are required"),
+const validationSchema = Yup.object({
+  exercise: Yup.string().required("Please select an exercise"),
+  sets: Yup.number()
+    .required("Number of sets is required")
+    .positive("Sets must be positive")
+    .integer("Sets must be a whole number")
+    .max(20, "Maximum 20 sets allowed"),
+  reps: Yup.number()
+    .required("Number of reps is required")
+    .positive("Reps must be positive")
+    .integer("Reps must be a whole number")
+    .max(100, "Maximum 100 reps allowed"),
 });
 
 const MultiStepWorkoutForm = () => {
-  const { exercise, setExercise, addWorkout, resetWorkout } = useWorkoutStore();
-  const [step, setStep] = useState(1);
+  const { addWorkout } = useWorkoutStore();
+
+  const formik = useFormik({
+    initialValues: {
+      exercise: "",
+      sets: "",
+      reps: "",
+    },
+    validationSchema,
+    onSubmit: (values, { resetForm }) => {
+      const workout = {
+        ...values,
+        id: Date.now(),
+        date: new Date().toISOString(),
+      };
+      addWorkout(workout);
+      resetForm();
+    },
+  });
+
+  const handleExerciseSelect = (exerciseData) => {
+    formik.setFieldValue("exercise", exerciseData?.name || "");
+  };
 
   return (
-    <Formik
-      initialValues={{ sets: "", reps: "" }}
-      validationSchema={WorkoutSchema}
-      onSubmit={(values, { resetForm }) => {
-        addWorkout({ exercise, ...values }); // Save workout
-        resetWorkout(); // Reset Zustand store
-        resetForm(); // Clear form fields
-        setStep(1); // Restart form
-      }}
-    >
-      {({ isValid }) => (
-        <Form className="p-6 space-y-6 w-full max-w-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg">
-          {/* Step 1: Select Exercise */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <label className="block text-sm font-semibold">
-                Select an Exercise:
-                <ExerciseSearch onSelect={setExercise} />
-              </label>
+    <div className="flex justify-center items-center min-h-screen w-full bg-gray-100 dark:bg-gray-900 px-4">
+      <div className="w-full max-w-md p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+          Log Your Workout
+        </h2>
 
-              {exercise && (
-                <p className="mt-2 text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {exercise}
-                </p>
-              )}
+        <form onSubmit={formik.handleSubmit} className="space-y-6">
+          <div>
+            <ExerciseSearch setData={handleExerciseSelect} />
+            {formik.touched.exercise && formik.errors.exercise && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {formik.errors.exercise}
+              </p>
+            )}
+            {formik.values.exercise && (
+              <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+                Selected: {formik.values.exercise}
+              </p>
+            )}
+          </div>
 
-              <button
-                type="button"
-                className={`w-full p-3 rounded-md transition font-semibold ${
-                  exercise
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                }`}
-                onClick={() => setStep(2)}
-                disabled={!exercise}
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <div>
+            <label htmlFor="sets" className="block text-gray-700 dark:text-gray-300 font-medium mb-1">
+              Sets
+            </label>
+            <input
+              type="number"
+              id="sets"
+              {...formik.getFieldProps("sets")}
+              className={`w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                formik.touched.sets && formik.errors.sets
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-700"
+              }`}
+            />
+            {formik.touched.sets && formik.errors.sets && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {formik.errors.sets}
+              </p>
+            )}
+          </div>
 
-          {/* Step 2: Enter Sets & Reps */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold">Sets:</label>
-                <Field
-                  name="sets"
-                  type="number"
-                  className="w-full p-2 border border-gray-500 rounded-md bg-gray-50 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-                <ErrorMessage name="sets" component="p" className="text-red-500 text-sm mt-1" />
-              </div>
+          <div>
+            <label htmlFor="reps" className="block text-gray-700 dark:text-gray-300 font-medium mb-1">
+              Reps
+            </label>
+            <input
+              type="number"
+              id="reps"
+              {...formik.getFieldProps("reps")}
+              className={`w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                formik.touched.reps && formik.errors.reps
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-700"
+              }`}
+            />
+            {formik.touched.reps && formik.errors.reps && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {formik.errors.reps}
+              </p>
+            )}
+          </div>
 
-              <div>
-                <label className="block text-sm font-semibold">Reps:</label>
-                <Field
-                  name="reps"
-                  type="number"
-                  className="w-full p-2 border border-gray-500 rounded-md bg-gray-50 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-                <ErrorMessage name="reps" component="p" className="text-red-500 text-sm mt-1" />
-              </div>
-
-              <div className="flex justify-between">
-                <button
-                  type="button"
-                  className="w-1/2 p-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
-                  onClick={() => setStep(1)}
-                >
-                  Back
-                </button>
-
-                <button
-                  type="submit"
-                  className={`w-1/2 p-3 rounded-md transition font-semibold ${
-                    isValid
-                      ? "bg-green-600 text-white hover:bg-green-700"
-                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  }`}
-                  disabled={!isValid}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          )}
-        </Form>
-      )}
-    </Formik>
+          <button
+            type="submit"
+            disabled={formik.isSubmitting || !formik.isValid}
+            className="w-full p-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {formik.isSubmitting ? "Saving..." : "Save Workout"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 

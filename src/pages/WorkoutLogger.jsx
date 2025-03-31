@@ -3,19 +3,23 @@ import WorkoutHistory from "../components/WorkoutHistory";
 
 const WorkoutLogger = () => {
   return (
-    <div className="max-w-lg mx-auto p-6 space-y-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold text-center">Log Your Workout</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid gap-8 md:grid-cols-2">
+        {/* Left Column - New Workout Form */}
+        <div className="glass-effect rounded-2xl p-6 animate-fade-in">
+          <h2 className="text-2xl font-bold mb-6 gradient-text">Log New Workout</h2>
+          <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 shadow-lg hover-card">
+            <MultiStepWorkoutForm />
+          </div>
+        </div>
 
-      {/* Workout Form */}
-      <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-2">New Workout</h2>
-        <MultiStepWorkoutForm />
-      </div>
-
-      {/* Workout History */}
-      <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-2">Workout History</h2>
-        <WorkoutHistory />
+        {/* Right Column - Workout History */}
+        <div className="glass-effect rounded-2xl p-6 animate-fade-in">
+          <h2 className="text-2xl font-bold mb-6 gradient-text">Recent Workouts</h2>
+          <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 shadow-lg hover-card">
+            <WorkoutHistory limit={5} />
+          </div>
+        </div>
       </div>
     </div>
   );
